@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ultimate Tic-Tac-Toe Pro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap');
+
+        :root {
+            --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+            --glass-bg: rgba(255, 255, 255, 0.03);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --player-x: #ff4d6d;
+            --player-o: #00d2ff;
+            --accent: #10b981;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background: var(--bg-gradient);
+            color: #f8fafc;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .glass-panel {
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        /* 棋盘样式优化 */
+        .ultimate-board {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            aspect-ratio: 1/1;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+        }
+
+        .small-board {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 4px;
+            padding: 4px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 12px;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: relative;
+            border: 2px solid transparent;
+        }
+
+        .small-board.active {
+            border-color: var(--accent);
+            box-shadow: 0 0 20px rgba(16, 185, 129, 0.3);
+            background: rgba(16, 185, 129, 0.05);
+            transform: scale(1.02);
+        }
+
+        .cell {
+            aspect-ratio: 1/1;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            font-weight: 800;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .cell:hover:not(.disabled) {
+            background: rgba(255, 255, 255, 0.15);
+            transform: translateY(-2px);
+        }
+
+        .cell.x { color: var(--player-x); text-shadow: 0 0 10px rgba(255, 77, 109, 0.5); }
+        .cell.o { color: var(--player-o); text-shadow: 0 0 10px rgba(0, 210, 255, 0.5); }
+
+        /* 获胜状态叠加层 */
+        .small-board.won-by-x::after,
+        .small-board.won-by-o::after,
+        .small-board.draw::after {
+            content: attr(data-winner);
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 5rem;
+            font-weight: 900;
+            border-radius: 10px;
+            z-index: 10;
+            backdrop-filter: blur(2px);
+            animation: stamp 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .small-board.won-by-x::after { background: rgba(255, 77, 109, 0.15); color: var(--player-x); }
+        .small-board.won-by-o::after { background: rgba(0, 210, 255, 0.15); color: var(--player-o); }
+        .small-board.draw::after { content: '='; background: rgba(255, 255, 255, 0.1); color: #94a3b8; }
+
+        @keyframes stamp {
+            0% { transform: scale(3); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        /* 按钮与交互 */
+        .btn-modern {
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-modern::before {
+            content: '';
+            position: absolute;
+            top: 0; left: -100%;
+            width: 100%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: 0.5s;
+        }
+
+        .btn-modern:hover::before { left: 100%; }
+
+        .stat-card {
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid var(--glass-border);
+            padding: 1rem;
+            border-radius: 16px;
+            text-align: center;
+        }
+
+        /* 隐藏原生滚动条 */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+
+    <div class="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        
+        <!-- 左侧信息栏 -->
+        <div class="lg:col-span-4 space-y-6">
+            <div class="glass-panel p-8">
+                <h1 class="text-4xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-emerald-400 mb-2">
+                    ULTIMATE
+                </h1>
+                <p class="text-slate-400 text-sm font-semibold tracking-widest uppercase mb-8">TIC TAC TOE PRO</p>
+                
+                <div class="space-y-6">
+                    <!-- 当前状态 -->
+                    <div class="p-4 rounded-2xl bg-white/5 border border-white/10">
+                        <p class="text-xs uppercase text-slate-500 font-bold mb-2">当前回合</p>
+                        <div id="player-display" class="text-3xl font-black flex items-center gap-3 transition-all duration-500">
+                            <span id="player-symbol" class="w-10 h-10 rounded-full flex items-center justify-center bg-white/10">X</span>
+                            <span id="player-name">玩家 X</span>
+                        </div>
+                        <div id="next-board-status" class="mt-4 text-sm font-medium px-3 py-2 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                            <i class="fas fa-bullseye mr-2"></i> 目标棋盘: <span id="target-board">任意</span>
+                        </div>
+                    </div>
+
+                    <!-- 胜率统计 -->
+                    <div class="grid grid-cols-3 gap-3">
+                        <div class="stat-card">
+                            <span class="block text-2xl font-bold text-rose-500" id="x-wins">0</span>
+                            <span class="text-[10px] text-slate-500 font-bold uppercase">X 获胜</span>
+                        </div>
+                        <div class="stat-card">
+                            <span class="block text-2xl font-bold text-sky-400" id="o-wins">0</span>
+                            <span class="text-[10px] text-slate-500 font-bold uppercase">O 获胜</span>
+                        </div>
+                        <div class="stat-card">
+                            <span class="block text-2xl font-bold text-slate-400" id="draws">0</span>
+                            <span class="text-[10px] text-slate-500 font-bold uppercase">平局</span>
+                        </div>
+                    </div>
+
+                    <!-- 游戏消息 -->
+                    <div id="game-message" class="min-h-[60px] flex items-center justify-center text-center font-bold text-lg"></div>
+
+                    <!-- 控制按钮 -->
+                    <div class="grid grid-cols-2 gap-4 pt-4">
+                        <button onclick="restartGame()" class="btn-modern py-3 bg-white text-slate-900 rounded-xl font-bold hover:bg-slate-200 shadow-lg">
+                            <i class="fas fa-redo-alt mr-2"></i> 重开
+                        </button>
+                        <button onclick="resetStats()" class="btn-modern py-3 bg-white/5 text-white border border-white/10 rounded-xl font-bold hover:bg-white/10">
+                            <i class="fas fa-trash-alt mr-2"></i> 重置
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 规则说明（折叠式或简易版） -->
+            <div class="glass-panel p-6 opacity-60 hover:opacity-100 transition-opacity">
+                <h3 class="text-sm font-bold uppercase mb-4 text-slate-400"><i class="fas fa-book-open mr-2"></i> 快速规则</h3>
+                <ul class="text-xs space-y-2 text-slate-300 leading-relaxed">
+                    <li>• 这是一个 3x3 的大棋盘，每个格子内嵌一个小棋盘。</li>
+                    <li>• 你的落子位置决定了对手下一步必须在哪一个小棋盘操作。</li>
+                    <li>• 赢得小棋盘即占据大棋盘的一个格子。</li>
+                    <li>• 大棋盘连成三元组即获胜。</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- 右侧棋盘区 -->
+        <div class="lg:col-span-8">
+            <div class="glass-panel p-4 md:p-8">
+                <div class="ultimate-board shadow-2xl" id="board-container">
+                    <!-- 通过JS生成 -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 游戏核心状态
+        let currentPlayer = 'X';
+        let nextBoardIndex = -1; // -1 表示自由落子
+        let gameActive = true;
+        let xWins = 0, oWins = 0, draws = 0;
+        
+        let boardState = Array.from({ length: 9 }, () => ({
+            cells: Array(9).fill(''),
+            winner: null,
+            isFull: false
+        }));
+
+        const WIN_COMBOS = [
+            [0, 1, 2], [3, 4, 5], [6, 7, 8],
+            [0, 3, 6], [1, 4, 7], [2, 5, 8],
+            [0, 4, 8], [2, 4, 6]
+        ];
+
+        // 初始化
+        function init() {
+            const container = document.getElementById('board-container');
+            container.innerHTML = '';
+
+            for (let i = 0; i < 9; i++) {
+                const sb = document.createElement('div');
+                sb.className = 'small-board';
+                sb.id = `sb-${i}`;
+                
+                for (let j = 0; j < 9; j++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'cell';
+                    cell.onclick = () => handleMove(i, j);
+                    sb.appendChild(cell);
+                }
+                container.appendChild(sb);
+            }
+            loadStats();
+            updateUI();
+        }
+
+        function handleMove(bIdx, cIdx) {
+            if (!gameActive) return;
+            
+            // 验证合法性
+            if (nextBoardIndex !== -1 && nextBoardIndex !== bIdx) return;
+            if (boardState[bIdx].winner || boardState[bIdx].cells[cIdx]) return;
+
+            // 落子
+            boardState[bIdx].cells[cIdx] = currentPlayer;
+            const cell = document.getElementById(`sb-${bIdx}`).children[cIdx];
+            cell.innerText = currentPlayer;
+            cell.classList.add(currentPlayer.toLowerCase(), 'disabled');
+
+            // 检查小棋盘
+            checkSmallBoard(bIdx);
+            
+            // 检查大棋盘
+            if (checkGlobalWin()) {
+                endGame(currentPlayer);
+            } else if (checkGlobalDraw()) {
+                endGame('Draw');
+            } else {
+                // 确定下一步范围
+                nextBoardIndex = cIdx;
+                if (boardState[nextBoardIndex].winner || boardState[nextBoardIndex].isFull) {
+                    nextBoardIndex = -1;
+                }
+                
+                currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+                updateUI();
+            }
+        }
+
+        function checkSmallBoard(idx) {
+            const b = boardState[idx];
+            for (let combo of WIN_COMBOS) {
+                const [a, b1, c] = combo;
+                if (b.cells[a] && b.cells[a] === b.cells[b1] && b.cells[a] === b.cells[c]) {
+                    b.winner = b.cells[a];
+                    const el = document.getElementById(`sb-${idx}`);
+                    el.classList.add(`won-by-${b.winner.toLowerCase()}`);
+                    el.setAttribute('data-winner', b.winner);
+                    return;
+                }
+            }
+            if (!b.cells.includes('')) {
+                b.isFull = true;
+                if (!b.winner) {
+                    const el = document.getElementById(`sb-${idx}`);
+                    el.classList.add('draw');
+                }
+            }
+        }
+
+        function checkGlobalWin() {
+            return WIN_COMBOS.some(combo => {
+                const [a, b, c] = combo;
+                return boardState[a].winner && 
+                       boardState[a].winner !== 'D' &&
+                       boardState[a].winner === boardState[b].winner && 
+                       boardState[a].winner === boardState[c].winner;
+            });
+        }
+
+        function checkGlobalDraw() {
+            return boardState.every(b => b.winner || b.isFull);
+        }
+
+        function updateUI() {
+            // 更新玩家显示
+            const symbol = document.getElementById('player-symbol');
+            const name = document.getElementById('player-name');
+            const target = document.getElementById('target-board');
+            
+            name.innerText = `玩家 ${currentPlayer}`;
+            symbol.innerText = currentPlayer;
+            symbol.style.color = currentPlayer === 'X' ? 'var(--player-x)' : 'var(--player-o)';
+            symbol.style.background = currentPlayer === 'X' ? 'rgba(255, 77, 109, 0.1)' : 'rgba(0, 210, 255, 0.1)';
+
+            target.innerText = nextBoardIndex === -1 ? '任意' : (nextBoardIndex + 1);
+            
+            // 高亮当前有效棋盘
+            for (let i = 0; i < 9; i++) {
+                const el = document.getElementById(`sb-${i}`);
+                el.classList.toggle('active', gameActive && (nextBoardIndex === -1 || nextBoardIndex === i) && !boardState[i].winner && !boardState[i].isFull);
+            }
+
+            document.getElementById('x-wins').innerText = xWins;
+            document.getElementById('o-wins').innerText = oWins;
+            document.getElementById('draws').innerText = draws;
+        }
+
+        function endGame(result) {
+            gameActive = false;
+            const msg = document.getElementById('game-message');
+            if (result === 'Draw') {
+                msg.innerText = "精彩的平局！";
+                msg.className = "text-slate-400 font-bold text-xl scale-110 transition-all";
+                draws++;
+            } else {
+                msg.innerText = `恭喜玩家 ${result} 获得最终胜利！`;
+                msg.style.color = result === 'X' ? 'var(--player-x)' : 'var(--player-o)';
+                msg.classList.add('scale-110');
+                if (result === 'X') xWins++; else oWins++;
+            }
+            saveStats();
+            updateUI();
+        }
+
+        function restartGame() {
+            boardState = Array.from({ length: 9 }, () => ({
+                cells: Array(9).fill(''),
+                winner: null,
+                isFull: false
+            }));
+            currentPlayer = 'X';
+            nextBoardIndex = -1;
+            gameActive = true;
+            document.getElementById('game-message').innerText = "";
+            document.getElementById('game-message').className = "min-h-[60px] flex items-center justify-center text-center font-bold text-lg";
+            init();
+        }
+
+        function saveStats() {
+            localStorage.setItem('ttt_pro_stats', JSON.stringify({ xWins, oWins, draws }));
+        }
+
+        function loadStats() {
+            const data = JSON.parse(localStorage.getItem('ttt_pro_stats') || '{}');
+            xWins = data.xWins || 0;
+            oWins = data.oWins || 0;
+            draws = data.draws || 0;
+        }
+
+        function resetStats() {
+            if (confirm("确定要重置所有统计数据吗？")) {
+                xWins = oWins = draws = 0;
+                saveStats();
+                updateUI();
+            }
+        }
+
+        // 启动
+        init();
+    </script>
+</body>
+</html>
