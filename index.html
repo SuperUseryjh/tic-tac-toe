@@ -3,89 +3,120 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ultimate Tic-Tac-Toe Pro</title>
+    <title>Ultimate Tic-Tac-Toe</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;700;800&display=swap');
 
         :root {
-            --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
-            --glass-bg: rgba(255, 255, 255, 0.03);
-            --glass-border: rgba(255, 255, 255, 0.1);
-            --player-x: #ff4d6d;
-            --player-o: #00d2ff;
+            --bg-gradient: linear-gradient(135deg, #090d16 0%, #0f1026 50%, #150f2e 100%);
+            --glass-bg: rgba(255, 255, 255, 0.02);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --player-x: #ff3b6c;
+            --player-x-glow: rgba(255, 59, 108, 0.4);
+            --player-o: #00f0ff;
+            --player-o-glow: rgba(0, 240, 255, 0.4);
             --accent: #10b981;
+            --accent-glow: rgba(16, 185, 129, 0.4);
         }
 
         body {
             font-family: 'Plus Jakarta Sans', sans-serif;
             background: var(--bg-gradient);
-            color: #f8fafc;
+            color: #f1f5f9;
             min-height: 100vh;
             overflow-x: hidden;
         }
 
         .glass-panel {
             background: var(--glass-bg);
-            backdrop-filter: blur(12px);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
             border: 1px solid var(--glass-border);
             border-radius: 24px;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            box-shadow: 0 20px 50px -12px rgba(0, 0, 0, 0.7);
         }
 
-        /* 棋盘样式优化 */
+        /* 棋盘流式布局 */
         .ultimate-board {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
             gap: 12px;
             aspect-ratio: 1/1;
             padding: 12px;
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 20px;
+            background: rgba(2, 4, 12, 0.6);
+            border-radius: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        @media (max-width: 640px) {
+            .ultimate-board {
+                gap: 6px;
+                padding: 6px;
+                border-radius: 16px;
+            }
         }
 
         .small-board {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
             gap: 4px;
-            padding: 4px;
-            background: rgba(0, 0, 0, 0.2);
-            border-radius: 12px;
-            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            padding: 5px;
+            background: rgba(255, 255, 255, 0.01);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 14px;
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
             position: relative;
-            border: 2px solid transparent;
         }
 
+        /* 激活棋盘高亮 */
         .small-board.active {
             border-color: var(--accent);
-            box-shadow: 0 0 20px rgba(16, 185, 129, 0.3);
-            background: rgba(16, 185, 129, 0.05);
-            transform: scale(1.02);
+            box-shadow: 0 0 15px var(--accent-glow);
+            background: rgba(16, 185, 129, 0.04);
+            transform: scale(1.015);
+            z-index: 20;
         }
 
+        /* 棋格 */
         .cell {
             aspect-ratio: 1/1;
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 6px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.02);
+            border-radius: 8px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.5rem;
+            font-size: clamp(1rem, 4vw, 1.75rem);
             font-weight: 800;
             cursor: pointer;
-            transition: all 0.2s ease;
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+            position: relative;
         }
 
         .cell:hover:not(.disabled) {
-            background: rgba(255, 255, 255, 0.15);
-            transform: translateY(-2px);
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(255, 255, 255, 0.2);
+            transform: translateY(-1px);
         }
 
-        .cell.x { color: var(--player-x); text-shadow: 0 0 10px rgba(255, 77, 109, 0.5); }
-        .cell.o { color: var(--player-o); text-shadow: 0 0 10px rgba(0, 210, 255, 0.5); }
+        .cell.x { color: var(--player-x); text-shadow: 0 0 12px var(--player-x-glow); }
+        .cell.o { color: var(--player-o); text-shadow: 0 0 12px var(--player-o-glow); }
 
-        /* 获胜状态叠加层 */
+        /* 最后落子标记 */
+        .cell.last-move {
+            border: 1.5px solid #fbbf24;
+            box-shadow: inset 0 0 8px rgba(251, 191, 36, 0.2);
+            animation: pulse-last 1.5s infinite alternate;
+        }
+
+        @keyframes pulse-last {
+            0% { border-color: rgba(251, 191, 36, 0.4); }
+            100% { border-color: rgba(251, 191, 36, 1); }
+        }
+
+        /* 小棋盘占领叠加层 */
         .small-board.won-by-x::after,
         .small-board.won-by-o::after,
         .small-board.draw::after {
@@ -95,28 +126,30 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 5rem;
+            font-size: clamp(2.5rem, 10vw, 4.5rem);
             font-weight: 900;
-            border-radius: 10px;
-            z-index: 10;
+            border-radius: 12px;
+            z-index: 30;
             backdrop-filter: blur(2px);
-            animation: stamp 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            -webkit-backdrop-filter: blur(2px);
+            animation: stamp 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
         }
 
-        .small-board.won-by-x::after { background: rgba(255, 77, 109, 0.15); color: var(--player-x); }
-        .small-board.won-by-o::after { background: rgba(0, 210, 255, 0.15); color: var(--player-o); }
-        .small-board.draw::after { content: '='; background: rgba(255, 255, 255, 0.1); color: #94a3b8; }
+        .small-board.won-by-x::after { background: rgba(255, 59, 108, 0.12); color: var(--player-x); text-shadow: 0 0 15px var(--player-x-glow); }
+        .small-board.won-by-o::after { background: rgba(0, 240, 255, 0.12); color: var(--player-o); text-shadow: 0 0 15px var(--player-o-glow); }
+        .small-board.draw::after { content: '='; background: rgba(255, 255, 255, 0.08); color: #64748b; }
 
         @keyframes stamp {
-            0% { transform: scale(3); opacity: 0; }
-            100% { transform: scale(1); opacity: 1; }
+            0% { transform: scale(3.5); opacity: 0; filter: blur(4px); }
+            100% { transform: scale(1); opacity: 1; filter: blur(0); }
         }
 
-        /* 按钮与交互 */
+        /* 渐变流光按钮 */
         .btn-modern {
-            transition: all 0.3s ease;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
             position: relative;
             overflow: hidden;
+            z-index: 1;
         }
 
         .btn-modern::before {
@@ -124,124 +157,567 @@
             position: absolute;
             top: 0; left: -100%;
             width: 100%; height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-            transition: 0.5s;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
+            transition: 0.6s;
+            z-index: -1;
         }
 
         .btn-modern:hover::before { left: 100%; }
 
-        .stat-card {
-            background: rgba(0, 0, 0, 0.2);
-            border: 1px solid var(--glass-border);
-            padding: 1rem;
-            border-radius: 16px;
-            text-align: center;
-        }
-
-        /* 隐藏原生滚动条 */
-        ::-webkit-scrollbar { width: 8px; }
+        /* 隐藏滚动条 */
+        ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
+        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.3); }
     </style>
 </head>
-<body class="p-4 md:p-8">
+<body class="p-3 md:p-8 min-h-screen flex items-center justify-center">
 
-    <div class="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-        
-        <!-- 左侧信息栏 -->
-        <div class="lg:col-span-4 space-y-6">
-            <div class="glass-panel p-8">
-                <h1 class="text-4xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-emerald-400 mb-2">
-                    ULTIMATE
-                </h1>
-                <p class="text-slate-400 text-sm font-semibold tracking-widest uppercase mb-8">TIC TAC TOE PRO</p>
-                
-                <div class="space-y-6">
-                    <!-- 当前状态 -->
-                    <div class="p-4 rounded-2xl bg-white/5 border border-white/10">
-                        <p class="text-xs uppercase text-slate-500 font-bold mb-2">当前回合</p>
-                        <div id="player-display" class="text-3xl font-black flex items-center gap-3 transition-all duration-500">
-                            <span id="player-symbol" class="w-10 h-10 rounded-full flex items-center justify-center bg-white/10">X</span>
-                            <span id="player-name">玩家 X</span>
-                        </div>
-                        <div id="next-board-status" class="mt-4 text-sm font-medium px-3 py-2 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                            <i class="fas fa-bullseye mr-2"></i> 目标棋盘: <span id="target-board">任意</span>
-                        </div>
-                    </div>
+    <!-- 1. 游戏模式 & 难度选择大厅 -->
+    <div id="mode-select" class="fixed inset-0 bg-[#070913]/95 backdrop-blur-md flex items-center justify-center z-50 transition-all duration-500">
+        <div class="glass-panel p-8 md:p-12 text-center max-w-md w-full mx-4 border border-white/10 relative overflow-hidden">
+            <div class="absolute -top-24 -left-24 w-48 h-48 bg-pink-500/10 rounded-full blur-3xl"></div>
+            <div class="absolute -bottom-24 -right-24 w-48 h-48 bg-cyan-500/10 rounded-full blur-3xl"></div>
 
-                    <!-- 胜率统计 -->
-                    <div class="grid grid-cols-3 gap-3">
-                        <div class="stat-card">
-                            <span class="block text-2xl font-bold text-rose-500" id="x-wins">0</span>
-                            <span class="text-[10px] text-slate-500 font-bold uppercase">X 获胜</span>
-                        </div>
-                        <div class="stat-card">
-                            <span class="block text-2xl font-bold text-sky-400" id="o-wins">0</span>
-                            <span class="text-[10px] text-slate-500 font-bold uppercase">O 获胜</span>
-                        </div>
-                        <div class="stat-card">
-                            <span class="block text-2xl font-bold text-slate-400" id="draws">0</span>
-                            <span class="text-[10px] text-slate-500 font-bold uppercase">平局</span>
-                        </div>
-                    </div>
-
-                    <!-- 游戏消息 -->
-                    <div id="game-message" class="min-h-[60px] flex items-center justify-center text-center font-bold text-lg"></div>
-
-                    <!-- 控制按钮 -->
-                    <div class="grid grid-cols-2 gap-4 pt-4">
-                        <button onclick="restartGame()" class="btn-modern py-3 bg-white text-slate-900 rounded-xl font-bold hover:bg-slate-200 shadow-lg">
-                            <i class="fas fa-redo-alt mr-2"></i> 重开
-                        </button>
-                        <button onclick="resetStats()" class="btn-modern py-3 bg-white/5 text-white border border-white/10 rounded-xl font-bold hover:bg-white/10">
-                            <i class="fas fa-trash-alt mr-2"></i> 重置
-                        </button>
-                    </div>
+            <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-pink-500 to-cyan-500 p-[1px] mb-6">
+                <div class="w-full h-full bg-[#0d0e22] rounded-2xl flex items-center justify-center">
+                    <i class="fas fa-cubes text-2xl text-cyan-400"></i>
                 </div>
             </div>
 
-            <!-- 规则说明（折叠式或简易版） -->
-            <div class="glass-panel p-6 opacity-60 hover:opacity-100 transition-opacity">
-                <h3 class="text-sm font-bold uppercase mb-4 text-slate-400"><i class="fas fa-book-open mr-2"></i> 快速规则</h3>
-                <ul class="text-xs space-y-2 text-slate-300 leading-relaxed">
-                    <li>• 这是一个 3x3 的大棋盘，每个格子内嵌一个小棋盘。</li>
-                    <li>• 你的落子位置决定了对手下一步必须在哪一个小棋盘操作。</li>
-                    <li>• 赢得小棋盘即占据大棋盘的一个格子。</li>
-                    <li>• 大棋盘连成三元组即获胜。</li>
+            <h1 class="text-4xl md:text-5xl font-black bg-clip-text text-transparent bg-gradient-to-r from-pink-500 via-purple-400 to-cyan-400 mb-2 tracking-tight">
+                ULTIMATE
+            </h1>
+            <p class="text-slate-400 text-xs font-bold tracking-widest uppercase mb-10">TIC TAC TOE PRO</p>
+            
+            <div class="space-y-4">
+                <!-- 人机对战入口 -->
+                <div class="bg-white/5 border border-white/5 p-4 rounded-2xl space-y-3">
+                    <button onclick="startGameMode(1)" class="w-full py-4 bg-gradient-to-r from-pink-500 to-purple-600 rounded-xl font-bold text-lg text-white shadow-lg shadow-pink-500/20 hover:scale-[1.02] active:scale-[0.98] transition-all">
+                        <i class="fas fa-robot mr-2"></i> 1P - 人机挑战
+                    </button>
+                    <!-- 难度配置项 -->
+                    <div class="flex justify-around items-center pt-1 bg-black/20 rounded-lg p-1 text-xs">
+                        <span class="text-slate-500 font-bold ml-1">AI 难度:</span>
+                        <button id="diff-easy" onclick="setDifficulty(0)" class="px-3 py-1.5 rounded-md font-bold transition-all text-slate-400">新手</button>
+                        <button id="diff-medium" onclick="setDifficulty(1)" class="px-3 py-1.5 rounded-md font-bold transition-all text-slate-400">精英</button>
+                        <button id="diff-hard" onclick="setDifficulty(2)" class="px-3 py-1.5 rounded-md font-bold transition-all text-slate-400">宗师</button>
+                    </div>
+                </div>
+
+                <!-- 双人对战入口 -->
+                <button onclick="startGameMode(2)" class="w-full py-5 bg-gradient-to-r from-cyan-500 to-blue-600 rounded-2xl font-bold text-lg text-white shadow-lg shadow-cyan-500/20 hover:scale-[1.02] active:scale-[0.98] transition-all">
+                    <i class="fas fa-users mr-2"></i> 2P - 双人博弈
+                </button>
+            </div>
+            
+            <div class="mt-8 text-xs text-slate-500 flex justify-center items-center gap-2 bg-white/5 p-3 rounded-xl border border-white/5">
+                <i class="fas fa-info-circle text-cyan-400"></i>
+                <span>落子格决定对手的下一步小棋盘范围，三连夺冠！</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. 主页面结构 -->
+    <div class="max-w-6xl w-full mx-auto grid grid-cols-1 lg:grid-cols-12 gap-6 md:gap-8 items-stretch relative">
+        
+        <!-- 左侧信息栏 -->
+        <div class="lg:col-span-4 flex flex-col justify-between space-y-6">
+            <div class="glass-panel p-6 md:p-8 flex-1 flex flex-col justify-between relative overflow-hidden">
+                <div>
+                    <!-- 标题栏与音效开关 -->
+                    <div class="flex justify-between items-start mb-6">
+                        <div>
+                            <h1 class="text-3xl font-black bg-clip-text text-transparent bg-gradient-to-r from-pink-500 to-cyan-400 tracking-tight">
+                                ULTIMATE
+                            </h1>
+                            <p class="text-slate-400 text-[10px] font-bold tracking-widest uppercase">TIC TAC TOE PRO</p>
+                        </div>
+                        <button onclick="toggleMute()" id="mute-btn" class="w-10 h-10 rounded-full flex items-center justify-center bg-white/5 border border-white/10 hover:bg-white/10 text-slate-300 transition-all">
+                            <i class="fas fa-volume-up" id="mute-icon"></i>
+                        </button>
+                    </div>
+                    
+                    <div class="space-y-5">
+                        <!-- 当前回合状态 -->
+                        <div class="p-4 rounded-2xl bg-white/5 border border-white/5 relative">
+                            <p class="text-[10px] uppercase text-slate-500 font-bold tracking-wider mb-2">当前行动回合</p>
+                            <div id="player-display" class="text-2xl font-black flex items-center gap-3 transition-all">
+                                <span id="player-symbol" class="w-10 h-10 rounded-xl flex items-center justify-center font-extrabold text-xl transition-all">X</span>
+                                <span id="player-name" class="text-slate-100 font-bold">玩家 X</span>
+                            </div>
+                            
+                            <!-- 模式与AI难度挂饰 -->
+                            <div class="flex items-center gap-2 mt-3">
+                                <span id="game-mode-badge" class="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-purple-500/10 text-purple-400 border border-purple-500/20">
+                                    双人对战
+                                </span>
+                                <span id="ai-diff-badge" class="hidden text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                                    新手难度
+                                </span>
+                            </div>
+
+                            <!-- 目标锁定提示 -->
+                            <div id="next-board-status" class="mt-4 flex items-center justify-between text-xs font-semibold px-3 py-2.5 rounded-xl bg-emerald-500/5 text-emerald-400 border border-emerald-500/15">
+                                <div class="flex items-center gap-2">
+                                    <i class="fas fa-bullseye animate-pulse"></i>
+                                    <span>锁定目标区域:</span>
+                                </div>
+                                <span id="target-board" class="font-black px-2 py-0.5 bg-emerald-500/15 rounded text-xs">任意</span>
+                            </div>
+                        </div>
+
+                        <!-- 记分牌 -->
+                        <div class="grid grid-cols-3 gap-3">
+                            <div class="bg-black/30 border border-white/5 p-3 rounded-xl text-center">
+                                <span class="block text-2xl font-black text-pink-500" id="x-wins">0</span>
+                                <span class="text-[10px] text-slate-500 font-bold uppercase tracking-wider">X 胜利</span>
+                            </div>
+                            <div class="bg-black/30 border border-white/5 p-3 rounded-xl text-center">
+                                <span class="block text-2xl font-black text-cyan-400" id="o-wins">0</span>
+                                <span class="text-[10px] text-slate-500 font-bold uppercase tracking-wider">O 胜利</span>
+                            </div>
+                            <div class="bg-black/30 border border-white/5 p-3 rounded-xl text-center">
+                                <span class="block text-2xl font-black text-slate-400" id="draws">0</span>
+                                <span class="text-[10px] text-slate-500 font-bold uppercase tracking-wider">平局</span>
+                            </div>
+                        </div>
+
+                        <!-- 游戏重要事件通知框 -->
+                        <div id="game-message" class="p-3 min-h-[50px] flex items-center justify-center text-center font-bold text-sm bg-white/3 rounded-xl border border-white/5 text-slate-300">
+                            点击开始你的第一步棋
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 控制按钮组 -->
+                <div class="grid grid-cols-3 gap-3 mt-6 pt-4 border-t border-white/5">
+                    <button onclick="restartGame()" class="btn-modern py-3 bg-white text-slate-950 rounded-xl font-bold hover:bg-slate-200 active:scale-95 text-xs">
+                        <i class="fas fa-redo-alt mr-1"></i> 重开
+                    </button>
+                    <button onclick="backToMenu()" class="btn-modern py-3 bg-white/5 hover:bg-white/10 text-white border border-white/10 rounded-xl font-bold active:scale-95 text-xs">
+                        <i class="fas fa-home mr-1"></i> 菜单
+                    </button>
+                    <button onclick="triggerResetStats()" class="btn-modern py-3 bg-red-500/10 text-red-400 border border-red-500/20 rounded-xl font-bold hover:bg-red-500/20 active:scale-95 text-xs">
+                        <i class="fas fa-trash-alt mr-1"></i> 重置
+                    </button>
+                </div>
+            </div>
+
+            <!-- 折叠式的规则 -->
+            <div class="glass-panel p-5 hidden md:block">
+                <h3 class="text-xs font-black uppercase mb-3 text-slate-400 flex items-center gap-2">
+                    <i class="fas fa-book-open text-pink-500"></i> 极客规则
+                </h3>
+                <ul class="text-xs space-y-2 text-slate-400 leading-relaxed list-none pl-0">
+                    <li class="flex items-start gap-1"><span class="text-cyan-400">◆</span> 你的落子坐标决定了对手下一步必在哪一个小棋盘。</li>
+                    <li class="flex items-start gap-1"><span class="text-cyan-400">◆</span> 若指定的棋盘已决出胜负或已满，对手获“任意落子”机会。</li>
+                    <li class="flex items-start gap-1"><span class="text-cyan-400">◆</span> 赢下小棋盘即算在大棋盘中占领该格。首个连成大三元者胜出。</li>
                 </ul>
             </div>
         </div>
 
-        <!-- 右侧棋盘区 -->
-        <div class="lg:col-span-8">
-            <div class="glass-panel p-4 md:p-8">
-                <div class="ultimate-board shadow-2xl" id="board-container">
-                    <!-- 通过JS生成 -->
+        <!-- 右侧核心棋盘 -->
+        <div class="lg:col-span-8 flex flex-col justify-center">
+            <div class="glass-panel p-3 md:p-6 shadow-2xl relative">
+                <div class="ultimate-board" id="board-container">
+                    <!-- 动态生成 -->
                 </div>
             </div>
         </div>
     </div>
 
+    <!-- 3. 自定义炫酷模态窗口 (代替原生的 confirm 和 alert) -->
+    <div id="custom-modal" class="fixed inset-0 bg-black/85 backdrop-blur-md hidden items-center justify-center z-[100] transition-opacity duration-300 opacity-0">
+        <div class="glass-panel p-8 text-center max-w-sm w-full mx-4 border border-white/10 transform scale-95 transition-transform duration-300" id="modal-box">
+            <div class="w-12 h-12 rounded-full bg-amber-500/10 text-amber-500 flex items-center justify-center text-xl mx-auto mb-4" id="modal-icon-container">
+                <i class="fas fa-exclamation-triangle" id="modal-icon"></i>
+            </div>
+            <h3 class="text-xl font-black text-slate-100 mb-2" id="modal-title">提示</h3>
+            <p class="text-slate-400 text-sm mb-6" id="modal-text">模态框内容文字</p>
+            <div class="flex gap-3 justify-center">
+                <button id="modal-cancel-btn" class="px-5 py-2.5 rounded-xl bg-white/5 border border-white/10 text-slate-300 font-bold hover:bg-white/10 transition-all text-xs">取消</button>
+                <button id="modal-confirm-btn" class="px-6 py-2.5 rounded-xl bg-gradient-to-r from-red-500 to-pink-500 text-white font-bold hover:scale-105 transition-all text-xs shadow-lg shadow-red-500/20">确认</button>
+            </div>
+        </div>
+    </div>
+
     <script>
-        // 游戏核心状态
+        // --- 核心游戏数据 ---
         let currentPlayer = 'X';
-        let nextBoardIndex = -1; // -1 表示自由落子
+        let nextBoardIndex = -1; // -1 表示自由落子 (Free Choice)
         let gameActive = true;
+        let gameMode = 2; // 1: 人机对战, 2: 双人对战
+        let aiDifficulty = 2; // 0: 新手, 1: 精英, 2: 宗师
         let xWins = 0, oWins = 0, draws = 0;
-        
+        let lastMove = { bIdx: -1, cIdx: -1 }; // 记录上一手落子
+
+        // 终极井字棋的局势数据结构
         let boardState = Array.from({ length: 9 }, () => ({
             cells: Array(9).fill(''),
-            winner: null,
+            winner: null, // 'X', 'O', 'D' (平局)
             isFull: false
         }));
 
         const WIN_COMBOS = [
-            [0, 1, 2], [3, 4, 5], [6, 7, 8],
-            [0, 3, 6], [1, 4, 7], [2, 5, 8],
-            [0, 4, 8], [2, 4, 6]
+            [0, 1, 2], [3, 4, 5], [6, 7, 8], // 横
+            [0, 3, 6], [1, 4, 7], [2, 5, 8], // 竖
+            [0, 4, 8], [2, 4, 6]             // 斜
         ];
 
-        // 初始化
+        // 棋盘格子的传统九宫格策略评估系数
+        const TTT_POS_WEIGHTS = [3, 2, 3, 2, 4, 2, 3, 2, 3];
+
+        // --- WEB AUDIO 合成器（免外部资源引入） ---
+        const AudioUtil = {
+            ctx: null,
+            isMuted: false,
+            init() {
+                if (!this.ctx) {
+                    this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+                }
+            },
+            play(type) {
+                if (this.isMuted) return;
+                this.init();
+                if (this.ctx.state === 'suspended') {
+                    this.ctx.resume();
+                }
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+
+                const now = this.ctx.currentTime;
+                if (type === 'click') {
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(200, now);
+                    osc.frequency.exponentialRampToValueAtTime(1200, now + 0.08);
+                    gain.gain.setValueAtTime(0.1, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.08);
+                    osc.start(now);
+                    osc.stop(now + 0.08);
+                } else if (type === 'move') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(currentPlayer === 'X' ? 320 : 440, now);
+                    osc.frequency.exponentialRampToValueAtTime(currentPlayer === 'X' ? 440 : 660, now + 0.12);
+                    gain.gain.setValueAtTime(0.15, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
+                    osc.start(now);
+                    osc.stop(now + 0.15);
+                } else if (type === 'win_board') {
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(523.25, now); // C5
+                    osc.frequency.setValueAtTime(659.25, now + 0.08); // E5
+                    osc.frequency.setValueAtTime(783.99, now + 0.16); // G5
+                    gain.gain.setValueAtTime(0.1, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+                    osc.start(now);
+                    osc.stop(now + 0.3);
+                } else if (type === 'win_game') {
+                    // 全局胜利曲调
+                    osc.type = 'sine';
+                    const scale = [523.25, 587.33, 659.25, 698.46, 783.99, 880.00, 987.77, 1046.50];
+                    scale.forEach((freq, idx) => {
+                        osc.frequency.setValueAtTime(freq, now + idx * 0.08);
+                    });
+                    gain.gain.setValueAtTime(0.2, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.8);
+                    osc.start(now);
+                    osc.stop(now + 0.8);
+                } else if (type === 'lose') {
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(220, now);
+                    osc.frequency.linearRampToValueAtTime(80, now + 0.4);
+                    gain.gain.setValueAtTime(0.2, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.45);
+                    osc.start(now);
+                    osc.stop(now + 0.45);
+                }
+            }
+        };
+
+        // --- 自定义弹窗逻辑 (替代原生 alert/confirm) ---
+        function showCustomModal(title, text, confirmCallback, cancelCallback = null, isAlert = false) {
+            const modal = document.getElementById('custom-modal');
+            const modalBox = document.getElementById('modal-box');
+            const mTitle = document.getElementById('modal-title');
+            const mText = document.getElementById('modal-text');
+            const cancelBtn = document.getElementById('modal-cancel-btn');
+            const confirmBtn = document.getElementById('modal-confirm-btn');
+            const iconContainer = document.getElementById('modal-icon-container');
+            const icon = document.getElementById('modal-icon');
+
+            mTitle.innerText = title;
+            mText.innerText = text;
+
+            if (isAlert) {
+                cancelBtn.classList.add('hidden');
+                iconContainer.className = "w-12 h-12 rounded-full bg-cyan-500/10 text-cyan-400 flex items-center justify-center text-xl mx-auto mb-4";
+                icon.className = "fas fa-info-circle";
+                confirmBtn.className = "px-6 py-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-500 text-white font-bold hover:scale-105 transition-all text-xs";
+            } else {
+                cancelBtn.classList.remove('hidden');
+                iconContainer.className = "w-12 h-12 rounded-full bg-red-500/10 text-red-400 flex items-center justify-center text-xl mx-auto mb-4";
+                icon.className = "fas fa-exclamation-triangle";
+                confirmBtn.className = "px-6 py-2.5 rounded-xl bg-gradient-to-r from-red-500 to-pink-500 text-white font-bold hover:scale-105 transition-all text-xs shadow-lg shadow-red-500/20";
+            }
+
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                modalBox.classList.remove('scale-95');
+            }, 10);
+
+            confirmBtn.onclick = () => {
+                closeModal();
+                if (confirmCallback) confirmCallback();
+            };
+
+            cancelBtn.onclick = () => {
+                closeModal();
+                if (cancelCallback) cancelCallback();
+            };
+        }
+
+        function closeModal() {
+            const modal = document.getElementById('custom-modal');
+            const modalBox = document.getElementById('modal-box');
+            modal.classList.add('opacity-0');
+            modalBox.classList.add('scale-95');
+            setTimeout(() => {
+                modal.classList.remove('flex');
+                modal.classList.add('hidden');
+            }, 300);
+        }
+
+        // 音效控制按钮
+        function toggleMute() {
+            AudioUtil.isMuted = !AudioUtil.isMuted;
+            const icon = document.getElementById('mute-icon');
+            if (AudioUtil.isMuted) {
+                icon.className = 'fas fa-volume-mute text-slate-500';
+            } else {
+                icon.className = 'fas fa-volume-up text-cyan-400';
+                AudioUtil.play('click');
+            }
+        }
+
+        // 设置AI难度
+        function setDifficulty(diff) {
+            AudioUtil.play('click');
+            aiDifficulty = diff;
+            const btns = [document.getElementById('diff-easy'), document.getElementById('diff-medium'), document.getElementById('diff-hard')];
+            btns.forEach((btn, idx) => {
+                if (idx === diff) {
+                    btn.className = "px-3 py-1.5 rounded-md font-bold transition-all bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow";
+                } else {
+                    btn.className = "px-3 py-1.5 rounded-md font-bold transition-all text-slate-400 hover:text-slate-200 hover:bg-white/5";
+                }
+            });
+        }
+
+        // 启动特定游戏模式
+        function startGameMode(mode) {
+            AudioUtil.play('click');
+            gameMode = mode;
+            document.getElementById('mode-select').classList.add('opacity-0', 'pointer-events-none');
+            setTimeout(() => {
+                document.getElementById('mode-select').style.display = 'none';
+            }, 500);
+            restartGame();
+        }
+
+        // --- 核心AI多维度智能评估算法 ---
+        function aiMove() {
+            if (gameMode !== 1 || currentPlayer !== 'O' || !gameActive) return;
+            
+            // 延时落子增强人类游戏观感体验
+            setTimeout(() => {
+                const move = selectBestAiMove();
+                if (move) {
+                    handleMove(move.boardIdx, move.cellIdx);
+                }
+            }, 600);
+        }
+
+        // 寻找局势最优解
+        function selectBestAiMove() {
+            // 获取所有当下可以落子的棋盘
+            let allowedBoards = [];
+            if (nextBoardIndex === -1) {
+                allowedBoards = boardState.filter(b => !b.winner && !b.isFull).map((_, i) => i);
+            } else {
+                if (!boardState[nextBoardIndex].winner && !boardState[nextBoardIndex].isFull) {
+                    allowedBoards = [nextBoardIndex];
+                } else {
+                    allowedBoards = boardState.filter(b => !b.winner && !b.isFull).map((_, i) => i);
+                }
+            }
+
+            if (allowedBoards.length === 0) return null;
+
+            // 1. 如果是新手难度，给AI设置高容错机制（部分选择随机）
+            if (aiDifficulty === 0 && Math.random() < 0.6) {
+                return getRandomChoice(allowedBoards);
+            }
+            // 精英难度有 25% 概率做随机选择
+            if (aiDifficulty === 1 && Math.random() < 0.25) {
+                return getRandomChoice(allowedBoards);
+            }
+
+            // 2. 宗师难度或高水平评估：遍历所有可能的可行格，进行算分评级
+            let candidates = [];
+            for (let bIdx of allowedBoards) {
+                const b = boardState[bIdx];
+                for (let cIdx = 0; cIdx < 9; cIdx++) {
+                    if (b.cells[cIdx] === '') {
+                        let score = evaluateMoveScore(bIdx, cIdx);
+                        candidates.push({ boardIdx: bIdx, cellIdx: cIdx, score: score });
+                    }
+                }
+            }
+
+            // 按分数降序排列，取高分值中的佼佼者（防止局局逻辑一成不变，高分同档次加少许微调）
+            candidates.sort((a, b) => b.score - a.score);
+            let bestScore = candidates[0].score;
+            let topCandidates = candidates.filter(c => Math.abs(c.score - bestScore) < 5);
+            return topCandidates[Math.floor(Math.random() * topCandidates.length)];
+        }
+
+        // 随机回退落子
+        function getRandomChoice(allowedBoards) {
+            const chosenBoard = allowedBoards[Math.floor(Math.random() * allowedBoards.length)];
+            const b = boardState[chosenBoard];
+            const emptyCells = b.cells.map((c, i) => c === '' ? i : -1).filter(i => i !== -1);
+            if (emptyCells.length === 0) return null;
+            const chosenCell = emptyCells[Math.floor(Math.random() * emptyCells.length)];
+            return { boardIdx: chosenBoard, cellIdx: chosenCell };
+        }
+
+        // 核心加分权重计算器
+        function evaluateMoveScore(bIdx, cIdx) {
+            let score = 0;
+
+            // 克隆当前特定棋盘数据结构，做假想模拟落子
+            const originalBoardCells = [...boardState[bIdx].cells];
+            
+            // --- A1. 检查假想落子后，AI（O）是否能直接夺下该小棋盘 ---
+            let leadsToSubWin = checkHypotheticalWin(originalBoardCells, cIdx, 'O');
+            if (leadsToSubWin) {
+                score += 1200;
+                // 如果夺下该小棋盘直接能赢得全局比赛，赋予绝对最高分！
+                if (checkHypotheticalGlobalWin(bIdx, 'O')) {
+                    score += 50000;
+                }
+            }
+
+            // --- A2. 检查玩家（X）是否下一步会赢得该小棋盘（进行战略堵截） ---
+            let blocksPlayerSubWin = checkHypotheticalWin(originalBoardCells, cIdx, 'X');
+            if (blocksPlayerSubWin) {
+                score += 850;
+                // 如果堵截了玩家直接拿全局全局胜利，赋予超级高分！
+                if (checkHypotheticalGlobalWin(bIdx, 'X')) {
+                    score += 25000;
+                }
+            }
+
+            // --- B1. 位置控制（中心点和四角控制加分） ---
+            // 小棋盘内部九宫格传统权重
+            score += TTT_POS_WEIGHTS[cIdx] * 12;
+            // 宏观大棋盘格子自身所处的地位
+            score += TTT_POS_WEIGHTS[bIdx] * 8;
+
+            // --- C1. 宏观对局排兵布阵（大棋盘连珠预测） ---
+            // 预测AI攻下该盘后，大棋盘的可能得分布优势
+            score += evaluateGlobalAlignment(bIdx, 'O') * 80;
+            // 预测阻塞玩家大棋盘连成三联的优势
+            score += evaluateGlobalAlignment(bIdx, 'X') * 50;
+
+            // --- D1. 关键前瞻性评估：这步棋走完后，对方将被送去的小棋盘（cIdx 棋盘） ---
+            const nextTargetBoard = boardState[cIdx];
+            if (nextTargetBoard.winner || nextTargetBoard.isFull) {
+                // 如果送给玩家一个“Free Choice”让玩家可以去大棋盘任意下，这局极其致命，需重罚分！
+                score -= 1500;
+            } else {
+                // 如果目标棋盘尚未拿下，分析对手被送去这个棋盘后的态势
+                const targetCells = nextTargetBoard.cells;
+                
+                // 威胁评估：对手是否有在这个目标棋盘直接小局获胜的格子？
+                let targetHasPlayerWin = false;
+                for (let k = 0; k < 9; k++) {
+                    if (targetCells[k] === '' && checkHypotheticalWin(targetCells, k, 'X')) {
+                        targetHasPlayerWin = true;
+                        break;
+                    }
+                }
+                if (targetHasPlayerWin) {
+                    // 如果送他去的盘会送上斩杀盘，重罚分！
+                    score -= 900;
+                }
+
+                // 抢攻评估：送去这个棋盘，AI自己是否有机会在此盘进行拦截或抢攻
+                let targetHasAiWin = false;
+                for (let k = 0; k < 9; k++) {
+                    if (targetCells[k] === '' && checkHypotheticalWin(targetCells, k, 'O')) {
+                        targetHasAiWin = true;
+                        break;
+                    }
+                }
+                if (targetHasAiWin) {
+                    score += 150; // AI在对面有杀招
+                }
+            }
+
+            return score;
+        }
+
+        // 模拟特定九宫格如果落子，是否胡牌
+        function checkHypotheticalWin(cells, index, player) {
+            const temp = [...cells];
+            temp[index] = player;
+            return WIN_COMBOS.some(combo => {
+                return temp[combo[0]] === player && 
+                       temp[combo[1]] === player && 
+                       temp[combo[2]] === player;
+            });
+        }
+
+        // 模拟宏观大九宫格中，若抢下特定 bIdx 棋盘，是否带来全局胜利
+        function checkHypotheticalGlobalWin(bIdx, player) {
+            const tempGlobal = boardState.map(b => b.winner);
+            tempGlobal[bIdx] = player;
+            return WIN_COMBOS.some(combo => {
+                return tempGlobal[combo[0]] === player && 
+                       tempGlobal[combo[1]] === player && 
+                       tempGlobal[combo[2]] === player;
+            });
+        }
+
+        // 大棋盘局势连线权重评估
+        function evaluateGlobalAlignment(bIdx, player) {
+            let alignmentStrength = 0;
+            for (let combo of WIN_COMBOS) {
+                if (combo.includes(bIdx)) {
+                    const otherIdxs = combo.filter(i => i !== bIdx);
+                    const state1 = boardState[otherIdxs[0]].winner;
+                    const state2 = boardState[otherIdxs[1]].winner;
+                    
+                    // 已经是另外二缺一的连线，攻克此格可凑齐三元
+                    if (state1 === player && state2 === player) {
+                        alignmentStrength += 5;
+                    } 
+                    // 已有一格归我，且另一格尚无人染指
+                    else if ((state1 === player && !state2) || (state2 === player && !state1)) {
+                        alignmentStrength += 2;
+                    }
+                }
+            }
+            return alignmentStrength;
+        }
+
+        // --- 核心UI搭建与动作挂接 ---
         function init() {
             const container = document.getElementById('board-container');
             container.innerHTML = '';
@@ -254,48 +730,67 @@
                 for (let j = 0; j < 9; j++) {
                     const cell = document.createElement('div');
                     cell.className = 'cell';
+                    cell.id = `cell-${i}-${j}`;
                     cell.onclick = () => handleMove(i, j);
                     sb.appendChild(cell);
                 }
                 container.appendChild(sb);
             }
             loadStats();
+            setDifficulty(aiDifficulty);
             updateUI();
         }
 
+        // 执行一步棋的落地
         function handleMove(bIdx, cIdx) {
             if (!gameActive) return;
             
-            // 验证合法性
+            // 下棋合法性拦截
             if (nextBoardIndex !== -1 && nextBoardIndex !== bIdx) return;
             if (boardState[bIdx].winner || boardState[bIdx].cells[cIdx]) return;
 
-            // 落子
-            boardState[bIdx].cells[cIdx] = currentPlayer;
-            const cell = document.getElementById(`sb-${bIdx}`).children[cIdx];
-            cell.innerText = currentPlayer;
-            cell.classList.add(currentPlayer.toLowerCase(), 'disabled');
+            // 移走上一个“最后落子”标记
+            if (lastMove.bIdx !== -1) {
+                const oldLast = document.getElementById(`cell-${lastMove.bIdx}-${lastMove.cIdx}`);
+                if (oldLast) oldLast.classList.remove('last-move');
+            }
 
-            // 检查小棋盘
+            // 更新数据态并上色
+            boardState[bIdx].cells[cIdx] = currentPlayer;
+            lastMove = { bIdx, cIdx };
+
+            const cell = document.getElementById(`cell-${bIdx}-${cIdx}`);
+            cell.innerText = currentPlayer;
+            cell.classList.add(currentPlayer.toLowerCase(), 'disabled', 'last-move');
+
+            AudioUtil.play('move');
+
+            // 回合后局部结算
             checkSmallBoard(bIdx);
             
-            // 检查大棋盘
+            // 宏观全局胜负判定
             if (checkGlobalWin()) {
                 endGame(currentPlayer);
             } else if (checkGlobalDraw()) {
                 endGame('Draw');
             } else {
-                // 确定下一步范围
+                // 定位下一步锁定的棋盘
                 nextBoardIndex = cIdx;
+                // 如果指定的棋盘已经有胜负或已满，重置为自由落子 (-1)
                 if (boardState[nextBoardIndex].winner || boardState[nextBoardIndex].isFull) {
                     nextBoardIndex = -1;
                 }
                 
+                // 轮换下子方
                 currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
                 updateUI();
+                
+                // 行动触发
+                aiMove();
             }
         }
 
+        // 判断小棋盘并生成印章
         function checkSmallBoard(idx) {
             const b = boardState[idx];
             for (let combo of WIN_COMBOS) {
@@ -305,9 +800,11 @@
                     const el = document.getElementById(`sb-${idx}`);
                     el.classList.add(`won-by-${b.winner.toLowerCase()}`);
                     el.setAttribute('data-winner', b.winner);
+                    AudioUtil.play('win_board');
                     return;
                 }
             }
+            // 判断是否格子满局
             if (!b.cells.includes('')) {
                 b.isFull = true;
                 if (!b.winner) {
@@ -317,6 +814,7 @@
             }
         }
 
+        // 校验全局赢棋
         function checkGlobalWin() {
             return WIN_COMBOS.some(combo => {
                 const [a, b, c] = combo;
@@ -327,51 +825,125 @@
             });
         }
 
+        // 校验全局平手
         function checkGlobalDraw() {
             return boardState.every(b => b.winner || b.isFull);
         }
 
+        // 刷新界面所有标签、样式
         function updateUI() {
-            // 更新玩家显示
             const symbol = document.getElementById('player-symbol');
             const name = document.getElementById('player-name');
             const target = document.getElementById('target-board');
+            const modeBadge = document.getElementById('game-mode-badge');
+            const diffBadge = document.getElementById('ai-diff-badge');
             
-            name.innerText = `玩家 ${currentPlayer}`;
+            // 是否是人机专属局
+            const isAiTurn = (gameMode === 1 && currentPlayer === 'O');
+            const playerLabel = isAiTurn ? 'AI 决策中...' : `玩家 ${currentPlayer}`;
+            
+            name.innerText = playerLabel;
             symbol.innerText = currentPlayer;
-            symbol.style.color = currentPlayer === 'X' ? 'var(--player-x)' : 'var(--player-o)';
-            symbol.style.background = currentPlayer === 'X' ? 'rgba(255, 77, 109, 0.1)' : 'rgba(0, 210, 255, 0.1)';
-
-            target.innerText = nextBoardIndex === -1 ? '任意' : (nextBoardIndex + 1);
             
-            // 高亮当前有效棋盘
-            for (let i = 0; i < 9; i++) {
-                const el = document.getElementById(`sb-${i}`);
-                el.classList.toggle('active', gameActive && (nextBoardIndex === -1 || nextBoardIndex === i) && !boardState[i].winner && !boardState[i].isFull);
+            if (currentPlayer === 'X') {
+                symbol.style.color = 'var(--player-x)';
+                symbol.style.background = 'rgba(255, 59, 108, 0.1)';
+                symbol.style.borderColor = 'rgba(255, 59, 108, 0.2)';
+            } else {
+                symbol.style.color = 'var(--player-o)';
+                symbol.style.background = 'rgba(0, 240, 255, 0.1)';
+                symbol.style.borderColor = 'rgba(0, 240, 255, 0.2)';
             }
 
+            // 指向性落子目标转换
+            if (nextBoardIndex === -1) {
+                target.innerText = '任意小棋盘';
+                target.className = "font-black px-2 py-0.5 bg-yellow-500/15 text-yellow-400 rounded text-xs animate-bounce";
+            } else {
+                // 九宫格从左上到右下，转换为视觉更强的 1~9 代表数
+                target.innerText = `第 ${nextBoardIndex + 1} 区`;
+                target.className = "font-black px-2 py-0.5 bg-emerald-500/15 text-emerald-400 rounded text-xs";
+            }
+            
+            // 配置模式徽标
+            if (gameMode === 1) {
+                modeBadge.innerText = '人机挑战赛';
+                modeBadge.className = "text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-pink-500/10 text-pink-400 border border-pink-500/20";
+                
+                const diffNames = ["新手难度", "精英挑战", "宗师试炼"];
+                diffBadge.innerText = diffNames[aiDifficulty];
+                diffBadge.classList.remove('hidden');
+            } else {
+                modeBadge.innerText = '双人对弈局';
+                modeBadge.className = "text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-cyan-500/10 text-cyan-400 border border-cyan-500/20";
+                diffBadge.classList.add('hidden');
+            }
+            
+            // 棋盘组状态高光聚焦控制
+            for (let i = 0; i < 9; i++) {
+                const el = document.getElementById(`sb-${i}`);
+                if (!el) continue;
+                const isPossibleTarget = (nextBoardIndex === -1 || nextBoardIndex === i);
+                const isPlayable = !boardState[i].winner && !boardState[i].isFull;
+                
+                if (gameActive && isPossibleTarget && isPlayable) {
+                    el.classList.add('active');
+                } else {
+                    el.classList.remove('active');
+                }
+            }
+
+            // 更新大盘胜率统计
             document.getElementById('x-wins').innerText = xWins;
             document.getElementById('o-wins').innerText = oWins;
             document.getElementById('draws').innerText = draws;
         }
 
+        // 战局落地结算
         function endGame(result) {
             gameActive = false;
             const msg = document.getElementById('game-message');
+            
             if (result === 'Draw') {
-                msg.innerText = "精彩的平局！";
-                msg.className = "text-slate-400 font-bold text-xl scale-110 transition-all";
+                msg.innerText = "棋逢对手，终成平局！";
+                msg.className = "p-3 min-h-[50px] flex items-center justify-center text-center font-bold text-sm bg-slate-500/10 text-slate-400 border border-slate-500/20 rounded-xl";
                 draws++;
+                AudioUtil.play('lose');
+                showCustomModal("握手言和", "本局双方激战成平手，不分伯仲！", null, null, true);
             } else {
-                msg.innerText = `恭喜玩家 ${result} 获得最终胜利！`;
-                msg.style.color = result === 'X' ? 'var(--player-x)' : 'var(--player-o)';
-                msg.classList.add('scale-110');
+                let winText = "";
+                if (gameMode === 1) {
+                    if (result === 'O') {
+                        winText = "AI 征服了本场比赛！再接再厉！";
+                        msg.className = "p-3 min-h-[50px] flex items-center justify-center text-center font-bold text-sm bg-red-500/10 text-red-400 border border-red-500/20 rounded-xl";
+                        AudioUtil.play('lose');
+                    } else {
+                        winText = "惊人实力！你成功击败了 AI！";
+                        msg.className = "p-3 min-h-[50px] flex items-center justify-center text-center font-bold text-sm bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-xl";
+                        AudioUtil.play('win_game');
+                    }
+                } else {
+                    winText = `祝贺玩家 ${result} 斩获本局胜利！`;
+                    msg.className = `p-3 min-h-[50px] flex items-center justify-center text-center font-bold text-sm rounded-xl ${result === 'X' ? 'bg-pink-500/10 text-pink-400 border border-pink-500/20' : 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/20'}`;
+                    AudioUtil.play('win_game');
+                }
+                msg.innerText = winText;
+                
+                showCustomModal(
+                    "战局揭晓", 
+                    winText, 
+                    null, 
+                    null, 
+                    true
+                );
+
                 if (result === 'X') xWins++; else oWins++;
             }
             saveStats();
             updateUI();
         }
 
+        // 棋局完全初始化重开
         function restartGame() {
             boardState = Array.from({ length: 9 }, () => ({
                 cells: Array(9).fill(''),
@@ -380,33 +952,55 @@
             }));
             currentPlayer = 'X';
             nextBoardIndex = -1;
+            lastMove = { bIdx: -1, cIdx: -1 };
             gameActive = true;
-            document.getElementById('game-message').innerText = "";
-            document.getElementById('game-message').className = "min-h-[60px] flex items-center justify-center text-center font-bold text-lg";
+            
+            const msg = document.getElementById('game-message');
+            msg.innerText = "点击任意高亮小棋局开始落子";
+            msg.className = "p-3 min-h-[50px] flex items-center justify-center text-center font-bold text-sm bg-white/3 rounded-xl border border-white/5 text-slate-300";
+            
             init();
         }
 
+        // --- 存储控制 (严格遵循无云端存储，仅采用本地内存/本地记录) ---
         function saveStats() {
-            localStorage.setItem('ttt_pro_stats', JSON.stringify({ xWins, oWins, draws }));
+            localStorage.setItem('ttt_pro_stats_v2', JSON.stringify({ xWins, oWins, draws }));
         }
 
         function loadStats() {
-            const data = JSON.parse(localStorage.getItem('ttt_pro_stats') || '{}');
+            const data = JSON.parse(localStorage.getItem('ttt_pro_stats_v2') || '{}');
             xWins = data.xWins || 0;
             oWins = data.oWins || 0;
             draws = data.draws || 0;
         }
 
-        function resetStats() {
-            if (confirm("确定要重置所有统计数据吗？")) {
-                xWins = oWins = draws = 0;
-                saveStats();
-                updateUI();
-            }
+        // 替代原生 confirm，使用定制动画弹窗重置数据
+        function triggerResetStats() {
+            AudioUtil.play('click');
+            showCustomModal(
+                "清空确认", 
+                "你确定要清空累积胜场战绩吗？此操作将立即刷新数据。", 
+                () => {
+                    xWins = oWins = draws = 0;
+                    saveStats();
+                    updateUI();
+                }
+            );
         }
 
-        // 启动
-        init();
+        function backToMenu() {
+            AudioUtil.play('click');
+            const menu = document.getElementById('mode-select');
+            menu.style.display = 'flex';
+            setTimeout(() => {
+                menu.classList.remove('opacity-0', 'pointer-events-none');
+            }, 10);
+        }
+
+        // 启动主板
+        window.onload = function() {
+            init();
+        };
     </script>
 </body>
 </html>
